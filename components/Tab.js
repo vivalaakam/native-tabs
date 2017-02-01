@@ -1,6 +1,6 @@
 import React, { Component, PropTypes } from 'react';
 
-import { View, Text, StyleSheet, TouchableHighlight } from 'react-native';
+import { View, Text, StyleSheet, TouchableHighlight, Dimensions } from 'react-native';
 
 export default class Tab extends Component {
   static propTypes = {
@@ -14,30 +14,11 @@ export default class Tab extends Component {
       main: {
         backgroundColor: color,
         position: 'absolute',
-        right: 0,
-        left: 0,
         top: 0,
-        bottom: 0,
         flex: 1,
         opacity: active === pos || toggled ? 1 : 0,
-
-      },
-      toggled: {
-        bottom: null,
-        height: 400,
-        top: 20 + (pos * 80),
-        transform: [
-          {
-            scaleX: 0.8,
-            scaleY: 0.8
-          },
-          {
-            perspective: 800
-          },
-          {
-            rotateX: '-30deg'
-          }
-        ],
+        width: Dimensions.get('window').width,
+        height: Dimensions.get('window').height - 50,
         shadowColor: '#000000',
         shadowOffset: {
           width: 0,
@@ -45,6 +26,21 @@ export default class Tab extends Component {
         },
         shadowRadius: 5,
         shadowOpacity: 1.0
+      },
+      toggled: {
+        top: 20 + (pos * 80),
+        transform: [
+          {
+            scaleX: 0.7,
+            scaleY: 0.7
+          },
+          {
+            perspective: 600
+          },
+          {
+            rotateX: '-30deg'
+          }
+        ]
       },
       touchable: {
         flex: 1
