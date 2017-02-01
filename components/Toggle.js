@@ -6,12 +6,16 @@ export default class Toggle extends Component {
     const styles = StyleSheet.create({
       main: {
         flex: 1
+      },
+      button: {
+        flex: 1,
+        height: 50
       }
     });
 
     return (
       <View style={styles.main}>
-        <Button onPress={this.props.onClick} title="Bottom" />
+        <Button style={styles.button} onPress={this.props.onClick} title="TOGGLE" />
       </View>
     );
   }

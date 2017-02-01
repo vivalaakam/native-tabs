@@ -3,6 +3,16 @@ import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
 import Tab from './Tab';
 import Toggle from './Toggle';
 
+const TABS = [
+  { content: 'Tab1', color: '#F44336' },
+  { content: 'Tab2', color: '#E91E63' },
+  { content: 'Tab3', color: '#9C27B0' },
+  { content: 'Tab4', color: '#673AB7' },
+  { content: 'Tab5', color: '#3F51B5' },
+  { content: 'Tab6', color: '#2196F3' },
+  { content: 'Tab7', color: '#03A9F4' }
+];
+
 export default class Main extends Component {
   state = {
     toggled: false,
@@ -21,34 +31,18 @@ export default class Main extends Component {
   renderTabs() {
     return (
       <View style={{flex:1}}>
-        <Tab color="#F44336" toggled={this.state.toggled} pos={0} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab1</Text>
-        </Tab>
-        <Tab color="#E91E63" toggled={this.state.toggled} pos={1} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab2</Text>
-        </Tab>
-        <Tab color="#9C27B0" toggled={this.state.toggled} pos={2} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab3</Text>
-        </Tab>
-        <Tab color="#673AB7" toggled={this.state.toggled} pos={3} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab4</Text>
-        </Tab>
-        <Tab color="#3F51B5" toggled={this.state.toggled} pos={4} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab5</Text>
-        </Tab>
-        <Tab color="#2196F3" toggled={this.state.toggled} pos={5} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab6</Text>
-        </Tab>
-        <Tab color="#03A9F4" toggled={this.state.toggled} pos={6} active={this.state.active}
-             setActive={this.setActive}>
-          <Text>Tab7</Text>
-        </Tab>
+        {TABS.map((tab, i) => {
+          return (
+            <Tab color={tab.color}
+                 key={i}
+                 toggled={this.state.toggled}
+                 pos={i}
+                 active={this.state.active}
+                 setActive={this.setActive}>
+              <Text>{tab.content}</Text>
+            </Tab>
+          );
+        })}
       </View>
     );
   }
@@ -72,10 +66,10 @@ export default class Main extends Component {
         width: Dimensions.get('window').width
       },
       tabs: {
-        flex: 9
+        flex: 1
       },
       toggle: {
-        flex: 1,
+        flexBasis: 50,
         backgroundColor: '#8BC34A'
       }
     });
