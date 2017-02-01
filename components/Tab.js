@@ -28,14 +28,14 @@ export default class Tab extends Component {
         shadowOpacity: 1.0
       },
       toggled: {
-        top: 20 + (pos * 80),
+        top: 30 + (pos * 80),
         transform: [
           {
             scaleX: 0.7,
             scaleY: 0.7
           },
           {
-            perspective: 600
+            perspective: 900
           },
           {
             rotateX: '-30deg'

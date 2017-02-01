@@ -16,7 +16,7 @@ const TABS = [
 export default class Main extends Component {
   state = {
     toggled: false,
-    active: 1
+    active: 0
   };
 
   onToggle = () => {
