@@ -51,8 +51,8 @@ export default class Main extends Component {
 
   renderScrollTabs() {
     return (
-      <ScrollView>
-        <View style={{height: (TABS.length + 1) * 80}}>
+      <ScrollView style={{flex: 1}}>
+        <View style={{height: (TABS.length + 1) * 80 , flex: 1}}>
           {this.renderTabs()}
         </View>
       </ScrollView>
@@ -73,7 +73,7 @@ export default class Main extends Component {
         flex: 1
       },
       toggle: {
-        flexBasis: 50,
+        flexBasis: 38,
         backgroundColor: '#8BC34A'
       }
     });
@@ -86,7 +86,7 @@ export default class Main extends Component {
           {tabs}
         </View>
         <View style={styles.toggle}>
-          <Toggle onClick={this.onToggle} />
+          <Toggle toggled={this.state.toggled} onClick={this.onToggle} />
         </View>
       </View>
     );

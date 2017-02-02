@@ -8,14 +8,15 @@ export default class Toggle extends Component {
         flex: 1
       },
       button: {
-        flex: 1,
-        height: 50
+        flex: 1
       }
     });
 
+    const name = this.props.toggled ? 'Cancel' : 'Toggle';
+
     return (
       <View style={styles.main}>
-        <Button style={styles.button} onPress={this.props.onClick} title="TOGGLE" />
+        <Button style={styles.button} onPress={this.props.onClick} title={name.toUpperCase()} />
       </View>
     );
   }
