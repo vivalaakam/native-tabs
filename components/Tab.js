@@ -1,22 +1,98 @@
 import React, { Component, PropTypes } from 'react';
 
-import { View, Text, StyleSheet, TouchableHighlight, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableHighlight, Dimensions, Animated } from 'react-native';
 
 export default class Tab extends Component {
   static propTypes = {
     color: PropTypes.string
   };
 
+  constructor(props) {
+    super(props);
+    this.animateValue = new Animated.Value(0);
+  }
+
+  animate(value, initial, to) {
+    this.animateValue.setValue(initial);
+    Animated.timing(
+      value,
+      {
+        toValue: to,
+        timing: 500
+      }
+    ).start()
+  }
+
+  forward() {
+    this.animate(this.animateValue, 0, 1);
+  }
+
+  back() {
+    this.animate(this.animateValue, 1, 0);
+  }
+
+  componentDidMount() {
+    if (this.props.toggled === true && this.props.stamp) {
+      this.forward();
+    } else {
+      this.back();
+    }
+  }
+
+  onPress = () => {
+    const { toggled, pos, setActive } = this.props;
+    if (toggled) {
+      setActive(pos);
+    }
+  };
+
+  getAnimateValues() {
+    const { stamp, active, pos, toggled } = this.props;
+
+    if (!stamp) {
+      return {
+        top: 0,
+        rotateX: '0deg',
+        scale: 1,
+        opacity: active === pos ? 1 : 0,
+        zIndex: active === pos ? 1 : 0
+      };
+    }
+
+    const top = this.animateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 30 + (pos * 80)]
+    });
+
+    const rotateX = this.animateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '-30deg']
+    });
+
+    const scale = this.animateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 0.7]
+    });
+
+    const opacity = active === pos ? 1 : this.animateValue.interpolate({
+        inputRange: [0, 0.25, 1],
+        outputRange: [0, 0, 1]
+      });
+
+    const zIndex = active === pos && !toggled ? 10 : 0;
+
+    return { top, rotateX, scale, opacity, zIndex }
+  }
+
   render() {
-    const { color, active, toggled, pos, setActive } = this.props;
+    const { color } = this.props;
+
+    const { top, rotateX, scale, opacity, zIndex } = this.getAnimateValues();
 
     const styles = StyleSheet.create({
-      main: {
-        backgroundColor: color,
-        position: 'absolute',
-        top: 0,
+      container: {
         flex: 1,
-        opacity: active === pos || toggled ? 1 : 0,
+        backgroundColor: color,
         width: Dimensions.get('window').width,
         height: Dimensions.get('window').height - 50,
         shadowColor: '#000000',
@@ -27,40 +103,20 @@ export default class Tab extends Component {
         shadowRadius: 5,
         shadowOpacity: 1.0
       },
-      toggled: {
-        top: 30 + (pos * 80),
-        transform: [
-          {
-            scaleX: 0.7,
-            scaleY: 0.7
-          },
-          {
-            perspective: 900
-          },
-          {
-            rotateX: '-30deg'
-          }
-        ]
-      },
       touchable: {
         flex: 1
       }
     });
 
-    const main = toggled ? StyleSheet.flatten([styles.main, styles.toggled]) : StyleSheet.flatten([styles.main]);
-
-    const onPress = () => {
-      if (toggled) {
-        setActive(pos);
-      }
-    };
-
     return (
-      <View style={main}>
-        <TouchableHighlight style={styles.touchable} onPress={onPress}>
-          {this.props.children}
-        </TouchableHighlight>
-      </View>
+      <Animated.View
+        style={ {position: 'absolute', opacity, top, zIndex, transform: [{ perspective: 900 }, { rotateX }, { scale }] }}>
+        <View style={styles.container}>
+          <TouchableHighlight style={styles.touchable} onPress={this.onPress}>
+            {this.props.children}
+          </TouchableHighlight>
+        </View>
+      </Animated.View>
     );
   }
 }

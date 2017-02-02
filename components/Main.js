@@ -16,11 +16,12 @@ const TABS = [
 export default class Main extends Component {
   state = {
     toggled: false,
+    stamp: null,
     active: 0
   };
 
   onToggle = () => {
-    this.setState({ toggled: !this.state.toggled });
+    this.setState({ toggled: !this.state.toggled, stamp: +new Date() });
   };
 
   setActive = (active) => {
@@ -38,6 +39,7 @@ export default class Main extends Component {
                  toggled={this.state.toggled}
                  pos={i}
                  active={this.state.active}
+                 stamp={this.state.stamp}
                  setActive={this.setActive}>
               <Text>{tab.content}</Text>
             </Tab>
