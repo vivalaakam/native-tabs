@@ -61,9 +61,9 @@ export default class Tab extends Component {
 
     const top = this.animateValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [0, 30 + (pos * 80)]
+      outputRange: [0, (pos * 80)]
     });
-
+    
     const rotateX = this.animateValue.interpolate({
       inputRange: [0, 1],
       outputRange: ['0deg', '-30deg']

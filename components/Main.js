@@ -52,7 +52,9 @@ export default class Main extends Component {
   renderScrollTabs() {
     return (
       <ScrollView>
-        {this.renderTabs()}
+        <View style={{height: (TABS.length + 1) * 80}}>
+          {this.renderTabs()}
+        </View>
       </ScrollView>
     )
   }
