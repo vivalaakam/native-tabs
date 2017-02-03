@@ -88,8 +88,20 @@ export default class Tab extends Component {
     return { top, rotateX, scale, opacity, zIndex }
   }
 
+  renderView() {
+    return this.props.children;
+  }
+
+  renderPressView() {
+    return (
+      <TouchableHighlight style={{flex: 1}} onPress={this.onPress}>
+        {this.renderView()}
+      </TouchableHighlight>
+    );
+  }
+
   render() {
-    const { color } = this.props;
+    const { toggled, color } = this.props;
 
     const { top, rotateX, scale, opacity, zIndex } = this.getAnimateValues();
 
@@ -106,19 +118,16 @@ export default class Tab extends Component {
         },
         shadowRadius: 5,
         shadowOpacity: 1.0
-      },
-      touchable: {
-        flex: 1
       }
     });
+
+    const view = toggled ? this.renderPressView() : this.renderView();
 
     return (
       <Animated.View
         style={ {position: 'absolute', flex: 1, opacity, top, zIndex, transform: [{ perspective: 600 }, { rotateX }, { scale }] }}>
         <View style={styles.container}>
-          <TouchableHighlight style={styles.touchable} onPress={this.onPress}>
-            {this.props.children}
-          </TouchableHighlight>
+          {view}
         </View>
       </Animated.View>
     );
