@@ -29,10 +29,7 @@ export default class Main extends Component {
       rotateValue: new Animated.Value(0),
       opacityValue: new Animated.Value(1)
     }));
-
-    this.scrollValue = new Animated.Value(0);
-    this.scrolled = 0;
-
+    
     this.tabs = TABS.map((tab, i) => this.getAnimateValues(i, this.state.active));
   }
 
