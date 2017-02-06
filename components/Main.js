@@ -58,6 +58,10 @@ const { width, height } = Dimensions.get('window');
 
 const tHeight = ( height - 38 ) / 5;
 
+const START = 20;
+const PERCENTS = 7;
+const FINISH = START + PERCENTS * 7;
+
 export default class Main extends Component {
   state = {
     toggled: false,
@@ -76,7 +80,7 @@ export default class Main extends Component {
       opacityValue: new Animated.Value(1)
     }));
 
-    this.tabs = TABS.map((tab, i) => this.getAnimateValues(i));
+    this.tabs = TABS.map((tab, i) => this.getAnimateValues(i, this.state.active));
   }
 
   onToggle = () => {
@@ -90,6 +94,7 @@ export default class Main extends Component {
   };
 
   setActive = (active) => {
+    this.tabs = TABS.map((tab, i) => this.getAnimateValues(i, active));
     this.setState({ active, toggled: !this.state.toggled }, () => {
       if (this.state.toggled === true) {
         this.forward();
@@ -104,11 +109,11 @@ export default class Main extends Component {
     const first = Math.floor(scrolled / tHeight);
     const scrolledCurr = scrolled % tHeight;
 
-    const currS = (5 * scrolledCurr ) / tHeight;
+    const currS = (PERCENTS * scrolledCurr ) / tHeight;
     if (first !== this.state.first) {
       this.setState({ first });
     }
-    this.animateTab(first, currS / 55);
+    this.animateTab(first, currS / FINISH);
   };
 
   animateTab(first, cRotated) {
@@ -116,9 +121,9 @@ export default class Main extends Component {
       return new Promise((resolve) => {
         animate.rotateValue.stopAnimation((value) => {
           const delta = i - first;
-          const curr = delta < 0 ? 20 : 20 + delta * 5;
-          const rotated = curr / 55 + cRotated;
-          const rot = Math.min(curr / 55 + this.rotated, value);
+          const curr = delta < 0 ? START : START + delta * PERCENTS;
+          const rotated = curr / FINISH + cRotated;
+          const rot = Math.min(curr / FINISH + this.rotated, value);
           const timing = Math.abs(( rotated - rot ) * 100);
           resolve(this.animate(animate.rotateValue, rot, rotated, timing));
         });
@@ -132,9 +137,7 @@ export default class Main extends Component {
     })
   }
 
-  getAnimateValues(pos) {
-    const { active } = this.state;
-
+  getAnimateValues(pos, active) {
     const topStart = pos > active ? height : 0;
 
     const top = this.animates[pos].animateValue.interpolate({
@@ -144,7 +147,7 @@ export default class Main extends Component {
 
     const rotateX = this.animates[pos].rotateValue.interpolate({
       inputRange: [0, 1],
-      outputRange: ['0deg', '-55deg']
+      outputRange: ['0deg', `-${FINISH}deg`]
     });
 
     const perspective = this.animates[pos].rotateValue.interpolate({
@@ -174,8 +177,8 @@ export default class Main extends Component {
     const { active, first } = this.state;
     const animations = this.animates.reduce((state, curr, i) => {
       const delta = i - first;
-      const currP = 20 + delta * 5;
-      const rotated = currP / 55 + this.rotated;
+      const currP = START + delta * PERCENTS;
+      const rotated = currP / FINISH + this.rotated;
       const zIndex = active === i ? 1 : 0;
 
       state.push(
@@ -193,8 +196,8 @@ export default class Main extends Component {
     const { active, first } = this.state;
     const animations = this.animates.reduce((state, curr, i) => {
       const delta = i - first;
-      const currP = 20 + delta * 5;
-      const rotated = currP / 55 + this.rotated;
+      const currP = START + delta * PERCENTS;
+      const rotated = currP / FINISH + this.rotated;
       const zIndex = active === i ? 1 : 0;
 
       state.push(
@@ -227,7 +230,7 @@ export default class Main extends Component {
     return (
       <View style={{flex:1, zIndex: 0}}>
         {TABS.map((tab, i) => {
-          const { top, rotateX, scale, opacity, perspective } = this.getAnimateValues(i);
+          const { top, rotateX, scale, opacity, perspective } = this.tabs[i];
           const zIndex = active === i || toggled ? 1 : 0;
           const style = {
             position: 'absolute',
