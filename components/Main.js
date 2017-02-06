@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView, Animated } from 'react-native';
-import Markdown from 'react-native-simple-markdown';
 import Tab from './Tab';
 import TABS from './Tabs';
 import Toggle from './Toggle';
@@ -16,7 +15,6 @@ const FINISH = START + PERCENTS * 7;
 export default class Main extends Component {
   state = {
     toggled: false,
-    first: 0,
     active: 0
   };
 
@@ -24,6 +22,7 @@ export default class Main extends Component {
     super(props);
 
     this.rotated = 0;
+    this.first = 0;
 
     this.animates = TABS.map((tab, i) => ({
       animateValue: new Animated.Value(0),
@@ -50,7 +49,7 @@ export default class Main extends Component {
 
   setActive = (active) => {
     this.tabs = TABS.map((tab, i) => this.getAnimateValues(i, active));
-    this.setState({ active, toggled: !this.state.toggled }, () => {
+    this.setState({ active, toggled: !this.state.toggled, first: -1 }, () => {
       if (this.state.toggled === true) {
         this.forward();
       } else {
@@ -60,22 +59,22 @@ export default class Main extends Component {
   };
 
   handleScroll = (event) => {
-    const scrolled = event.nativeEvent.contentOffset.y;
-    const first = Math.floor(scrolled / HEIGHT_CELL);
-    const scrolledCurr = scrolled % HEIGHT_CELL;
+    if (this.state.toggled) {
+      const scrolled = event.nativeEvent.contentOffset.y;
+      const first = Math.floor(scrolled / HEIGHT_CELL);
+      const scrolledCurr = scrolled % HEIGHT_CELL;
 
-    const currS = (PERCENTS * scrolledCurr ) / HEIGHT_CELL;
-    if (first !== this.state.first) {
-      this.setState({ first });
+      const currS = (PERCENTS * scrolledCurr ) / HEIGHT_CELL;
+      this.first = first;
+      this.animateTab(currS / FINISH);
     }
-    this.animateTab(first, currS / FINISH);
   };
 
-  animateTab(first, cRotated) {
+  animateTab(cRotated) {
     const animates = this.animates.map((animate, i) => {
       return new Promise((resolve) => {
         animate.rotateValue.stopAnimation((value) => {
-          const delta = i - first;
+          const delta = i - this.first;
           const curr = delta < 0 ? START : START + delta * PERCENTS;
           const rotated = curr / FINISH + cRotated;
           const rot = Math.min(curr / FINISH + this.rotated, value);
@@ -94,7 +93,6 @@ export default class Main extends Component {
 
   getAnimateValues(pos, active) {
     const topStart = pos > active ? height : 0;
-
     const top = this.animates[pos].animateValue.interpolate({
       inputRange: [0, 1],
       outputRange: [topStart, (pos * HEIGHT_CELL)]
@@ -129,9 +127,9 @@ export default class Main extends Component {
   }
 
   forward() {
-    const { active, first } = this.state;
+    const { active } = this.state;
     const animations = this.animates.reduce((state, curr, i) => {
-      const delta = i - first;
+      const delta = Math.max(i - this.first, 0);
       const currP = START + delta * PERCENTS;
       const rotated = currP / FINISH + this.rotated;
       const zIndex = active === i ? 1 : 0;
@@ -148,9 +146,9 @@ export default class Main extends Component {
   }
 
   back() {
-    const { active, first } = this.state;
+    const { active } = this.state;
     const animations = this.animates.reduce((state, curr, i) => {
-      const delta = i - first;
+      const delta = Math.max(i - this.first, 0);
       const currP = START + delta * PERCENTS;
       const rotated = currP / FINISH + this.rotated;
       const zIndex = active === i ? 1 : 0;
@@ -164,41 +162,37 @@ export default class Main extends Component {
       return state;
     }, []);
 
-    Animated.parallel(animations).start();
+    Animated.parallel(animations).start(() => {
+      this._scroll.scrollTo({ y: 0, animated: true });
+    });
   }
 
   renderTabs() {
     const { active, toggled } = this.state;
 
-    return (
-      <View style={{flex:1, zIndex: 0}}>
-        {TABS.map((tab, i) => {
-          const { top, rotateX, scale, opacity, perspective } = this.tabs[i];
-          const zIndex = active === i || toggled ? 1 : 0;
-          const style = {
-            position: 'absolute',
-            flex: 1,
-            opacity,
-            top,
-            zIndex,
-            transform: [{ perspective }, { rotateX }, { scale }]
-          };
-
-          return (
-            <Animated.View
-              style={style}
-              key={Math.random()}>
-              <Tab color={tab.color}
-                   toggled={toggled}
-                   pos={i}
-                   setActive={this.setActive}>
-                {tab.content()}
-              </Tab>
-            </Animated.View>
-          );
-        })}
-      </View>
-    );
+    return TABS.map((tab, i) => {
+      const { top, rotateX, scale, opacity, perspective } = this.tabs[i];
+      const zIndex = active === i || toggled ? 1 : 0;
+      const style = {
+        position: 'absolute',
+        flex: 1,
+        opacity,
+        top,
+        zIndex,
+        transform: [{ perspective }, { rotateX }, { scale }]
+      };
+      return (
+        <Animated.View
+          style={style}
+          key={i}>
+          <Tab toggled={toggled}
+               pos={i}
+               setActive={this.setActive}>
+            {tab.content()}
+          </Tab>
+        </Animated.View>
+      );
+    });
   }
 
   render() {
@@ -207,8 +201,8 @@ export default class Main extends Component {
         position: 'relative',
         flex: 1,
         flexDirection: 'column',
-        marginTop: 20,
         alignItems: 'stretch',
+        paddingTop: 20,
         width,
         backgroundColor: 'rgba(0 ,0,0, .3)'
       },

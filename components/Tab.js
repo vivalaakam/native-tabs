@@ -6,16 +6,14 @@ const { width, height } = Dimensions.get('window');
 
 export default class Tab extends Component {
   static propTypes = {
-    color: PropTypes.string
+    children: PropTypes.node
   };
 
   onPress = () => {
-    const { toggled, pos, setActive } = this.props;
-    if (toggled) {
-      setActive(pos);
-    }
+    const { pos, setActive } = this.props;
+    setActive(pos);
   };
-  
+
   render() {
     const { toggled } = this.props;
 
