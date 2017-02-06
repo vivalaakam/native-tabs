@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { View, Text, StyleSheet, Dimensions, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, ScrollView, Animated } from 'react-native';
 import Markdown from 'react-native-simple-markdown';
 import Tab from './Tab';
 import Toggle from './Toggle';
@@ -54,11 +54,20 @@ And even add a cool video ð!
   { content: 'Tab7', color: '#03A9F4' }
 ];
 
+const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
+
+const { width, height } = Dimensions.get('window');
+
+const tHeight = ( height - 38 ) / 5;
+
 export default class Main extends Component {
   state = {
     toggled: false,
     stamp: null,
-    active: 0
+    active: 0,
+    scrolled: 0,
+    scrolledCurr: 0,
+    first: 0
   };
 
   onToggle = () => {
@@ -68,6 +77,13 @@ export default class Main extends Component {
   setActive = (active) => {
     this.setState({ active });
     this.onToggle();
+  };
+
+  handleScroll = (event) => {
+    const scrolled = event.nativeEvent.contentOffset.y;
+    const first = Math.floor(scrolled / tHeight);
+    const scrolledCurr = scrolled % tHeight;
+    this.setState({ scrolled, first, scrolledCurr });
   };
 
   renderTabs() {
@@ -92,7 +108,11 @@ export default class Main extends Component {
                  toggled={this.state.toggled}
                  pos={i}
                  active={this.state.active}
+                 scrolled={this.state.scrolled}
+                 first={this.state.first}
+                 scrolledCurr={this.state.scrolledCurr}
                  stamp={this.state.stamp}
+                 tHeight={tHeight}
                  setActive={this.setActive}>
               <Markdown styles={styles}>{tab.content}</Markdown>
             </Tab>
@@ -104,8 +124,8 @@ export default class Main extends Component {
 
   renderScrollTabs() {
     return (
-      <ScrollView style={{flex: 1}}>
-        <View style={{height: (TABS.length + 1) * 80 , flex: 1}}>
+      <ScrollView style={{flex: 1}} onScroll={this.handleScroll} scrollEventThrottle={16}>
+        <View style={{height: (TABS.length + 1) * tHeight }}>
           {this.renderTabs()}
         </View>
       </ScrollView>
@@ -120,7 +140,7 @@ export default class Main extends Component {
         flexDirection: 'column',
         marginTop: 20,
         alignItems: 'stretch',
-        width: Dimensions.get('window').width
+        width
       },
       tabs: {
         flex: 1

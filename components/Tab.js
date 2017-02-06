@@ -12,33 +12,48 @@ export default class Tab extends Component {
   constructor(props) {
     super(props);
     this.animateValue = new Animated.Value(0);
-  }
+    this.rotateValue = new Animated.Value(0);
 
-  animate(value, initial, to) {
-    this.animateValue.setValue(initial);
-    Animated.timing(
-      value,
-      {
-        toValue: to,
-        timing: 500
-      }
-    ).start()
-  }
+    const { pos, tHeight, first, scrolledCurr } = props;
 
-  forward() {
-    this.animate(this.animateValue, 0, 1);
-  }
+    const delta = pos - first;
+    const curr = 20 + delta * 5;
+    const currS = (5 * scrolledCurr ) / tHeight;
 
-  back() {
-    this.animate(this.animateValue, 1, 0);
-  }
+    this.rotated = (curr + currS) / 55;
 
-  componentDidMount() {
+    console.log(this.rotated);
+
     if (this.props.toggled === true && this.props.stamp) {
       this.forward();
     } else {
       this.back();
     }
+  }
+
+  animate(value, initial, to, timing = 500) {
+    value.setValue(initial);
+    return Animated.timing(
+      value,
+      {
+        toValue: to,
+        timing
+      }
+    )
+  }
+
+  forward() {
+    Animated.parallel([
+      this.animate(this.animateValue, 0, 1),
+      this.animate(this.rotateValue, 0, this.rotated)
+    ]).start();
+  }
+
+  back() {
+    Animated.parallel([
+      this.animate(this.animateValue, 1, 0),
+      this.animate(this.rotateValue, this.rotated, 0)
+    ]).start();
   }
 
   onPress = () => {
@@ -49,7 +64,7 @@ export default class Tab extends Component {
   };
 
   getAnimateValues() {
-    const { stamp, active, pos, toggled } = this.props;
+    const { stamp, active, pos, toggled, tHeight } = this.props;
 
     if (!stamp) {
       return {
@@ -57,7 +72,8 @@ export default class Tab extends Component {
         rotateX: '0deg',
         scale: 1,
         opacity: active === pos ? 1 : 0,
-        zIndex: active === pos ? 1 : 0
+        zIndex: active === pos ? 1 : 0,
+        perspective: 600
       };
     }
 
@@ -65,12 +81,17 @@ export default class Tab extends Component {
 
     const top = this.animateValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [topStart, (pos * 80)]
+      outputRange: [topStart, (pos * tHeight)]
     });
 
-    const rotateX = this.animateValue.interpolate({
+    const rotateX = this.rotateValue.interpolate({
       inputRange: [0, 1],
-      outputRange: ['0deg', '-30deg']
+      outputRange: ['0deg', '-55deg']
+    });
+
+    const perspective = this.rotateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [170, 760]
     });
 
     const scale = this.animateValue.interpolate({
@@ -85,12 +106,12 @@ export default class Tab extends Component {
 
     const zIndex = active === pos && !toggled ? 10 : 0;
 
-    return { top, rotateX, scale, opacity, zIndex }
+    return { top, rotateX, scale, opacity, zIndex, perspective }
   }
 
   renderView() {
     return (
-      <ScrollView style={{padding: 10}}>
+      <ScrollView style={{padding: 10, flex: 1}}>
         {this.props.children}
       </ScrollView>);
   }
@@ -103,10 +124,28 @@ export default class Tab extends Component {
     );
   }
 
+  componentWillReceiveProps({ first, scrolledCurr }) {
+    const { pos, tHeight } = this.props;
+    if (pos >= first) {
+      const delta = pos - first;
+      const curr = 20 + delta * 5;
+      const currS = (5 * scrolledCurr ) / tHeight;
+      const rotated = (curr + currS) / 55;
+
+      this.rotateValue.stopAnimation((value) => {
+        const rot = Math.min(this.rotated, value);
+        const timing = Math.abs(( rotated - rot ) * 100);
+        this.animate(this.rotateValue, rot, rotated, timing).start(() => {
+          this.rotated = rotated;
+        });
+      });
+    }
+  }
+
   render() {
     const { toggled, color } = this.props;
 
-    const { top, rotateX, scale, opacity, zIndex } = this.getAnimateValues();
+    const { top, rotateX, scale, opacity, zIndex, perspective } = this.getAnimateValues();
 
     const styles = StyleSheet.create({
       container: {
@@ -117,7 +156,7 @@ export default class Tab extends Component {
         shadowColor: '#000000',
         shadowOffset: {
           width: 0,
-          height: 3
+          height: 5
         },
         shadowRadius: 5,
         shadowOpacity: 1.0
@@ -128,7 +167,7 @@ export default class Tab extends Component {
 
     return (
       <Animated.View
-        style={ {position: 'absolute', flex: 1, opacity, top, zIndex, transform: [{ perspective: 600 }, { rotateX }, { scale }] }}>
+        style={ {position: 'absolute', flex: 1, opacity, top, zIndex, transform: [{ perspective }, { rotateX }, { scale }] }}>
         <View style={styles.container}>
           {view}
         </View>
