@@ -2,62 +2,13 @@ import React, { Component } from 'react';
 import { View, Text, StyleSheet, Dimensions, ScrollView, Animated } from 'react-native';
 import Markdown from 'react-native-simple-markdown';
 import Tab from './Tab';
+import TABS from './Tabs';
 import Toggle from './Toggle';
-
-const TABS = [
-  {
-    content: `
-Lorem ipsum dolor sit amet, vis id tollit decore. Pri nisl mollis ei, commodo voluptua complectitur at sit. Te cibo dissentias vix. Eos liber luptatum ad. Et ubique expetenda assueverit pri, eam lucilius omittantur an, his ad facilisi periculis.
-
-Et vim solum repudiandae, oblique petentium eam eu. Eam et volutpat mediocritatem, nec novum melius aperiam ex, et ius perpetua repudiare. No usu viderer veritus, ad his alia summo. In vitae animal ius. Volumus ponderum per ne.
-
-Velit affert option vis et, ut vix agam salutatus, sed aeterno explicari argumentum te. Nostro audire virtute pri id, ei ignota timeam sed. Ut wisi putant mea, cu suas tation ius, id tamquam laoreet aliquando vis. Hinc partem periculis duo no, pro ad quando graece instructior. Est veniam civibus ex. Malis dicat inani at cum, salutandi gloriatur mea cu, rebum salutandi reformidans no quo. No has vivendo neglegentur, nam in omnium virtute, sed ut diam duis viris.
-
-Vix an mazim nostro, eam graeci tincidunt maiestatis no. Ut eirmod timeam ornatus has, te per delicata maluisset liberavisse, alterum molestiae cu eam. An noluisse salutandi consequat vel. Cu quot fuisset complectitur mel. Ei nec illud graeco, at duo odio debet congue, audire scripta vel ut. Eum quaeque disputationi at, nam te clita dolores, tritani sensibus scribentur ius in.
-
-Ei falli legere regione vel. Homero populo duo ad. Ut possim iudicabit per, vix ea accusata atomorum. Quando partem euismod ei est, has ut commodo sanctus. Numquam labores vix ex, quo ut periculis torquatos. Ut nam reque causae civibus, pro te augue sensibus urbanitas. Accumsan ponderum ut has.\n Eirmod eripuit deserunt no vis, eum assum dissentias accommodare ad. Qui at altera partiendo iracundia, et eos postea causae omnesque. Ut veri lobortis sapientem eam, ut aeterno deleniti mei, sed ut luptatum ocurreret prodesset. At usu nisl invenire scripserit. Vim feugiat ponderum invenire ut, dolor delectus sea id.
-
-Usu eius epicuri vituperatoribus et. Eam in perpetua dissentiet, iuvaret delenit ea per. His no suas apeirian, sed ad iudico veniam. Nam altera oporteat pertinacia ea, ad cum etiam utinam consequat, mel et doming dignissim. Porro volutpat percipitur vel at. \n Adipisci salutandi mei ex. Ei ius graeco fierent suscipiantur, ne nonumy imperdiet sed. Tantas invidunt adipisci pri ut. Iriure viderer has ad. Ut sit dolorum deseruisse conclusionemque, nam alterum offendit praesent at. Ea audiam argumentum cum, ius magna ponderum accusata eu.`,
-    color: '#F44336'
-  },
-  {
-    content: `Some *really* basic **Markdown**.
-| # | Name   | Age |
-|---|--------|-----|
-| 1 | John   | 19  |
-| 2 | Sally  | 18  |
-| 3 | Stream | 20  |`,
-    color: '#E91E63'
-  },
-  {
-    content: `
-#Markdown in react-native is so cool!
-
-You can **emphasize** what you want, or just _suggest it_ ðâ¦
-
-You can even [link your website](http://charlesmangwa.surge.sh) or if you prefer: [email somebody](mailto:email@somebody.com) 
-
-Spice it up with some GIF ð:
-
-![Some GIF](https://media.giphy.com/media/dkGhBWE3SyzXW/giphy.gif) 
-
-And even add a cool video ð!
-
-[![A cool video from YT](https://img.youtube.com/vi/dQw4w9WgXcQ/0.jpg)](http://www.youtube.com/watch?v=dQw4w9WgXcQ) 
-
-[![Another one from Vimeo](https://i.vimeocdn.com/video/399486266_640.jpg)](https://vimeo.com/57580368)`,
-    color: '#9C27B0'
-  },
-  { content: 'Tab4', color: '#673AB7' },
-  { content: 'Tab5', color: '#3F51B5' },
-  { content: 'Tab6', color: '#2196F3' },
-  { content: 'Tab7', color: '#03A9F4' }
-];
 
 const { width, height } = Dimensions.get('window');
 
-const tHeight = ( height - 38 ) / 5;
-
+const HEIGHT = height - 38;
+const HEIGHT_CELL = HEIGHT / 5;
 const START = 20;
 const PERCENTS = 7;
 const FINISH = START + PERCENTS * 7;
@@ -83,6 +34,10 @@ export default class Main extends Component {
     this.tabs = TABS.map((tab, i) => this.getAnimateValues(i, this.state.active));
   }
 
+  scrollRef = (ref) => {
+    this._scroll = ref;
+  };
+
   onToggle = () => {
     this.setState({ toggled: !this.state.toggled }, () => {
       if (this.state.toggled === true) {
@@ -106,10 +61,10 @@ export default class Main extends Component {
 
   handleScroll = (event) => {
     const scrolled = event.nativeEvent.contentOffset.y;
-    const first = Math.floor(scrolled / tHeight);
-    const scrolledCurr = scrolled % tHeight;
+    const first = Math.floor(scrolled / HEIGHT_CELL);
+    const scrolledCurr = scrolled % HEIGHT_CELL;
 
-    const currS = (PERCENTS * scrolledCurr ) / tHeight;
+    const currS = (PERCENTS * scrolledCurr ) / HEIGHT_CELL;
     if (first !== this.state.first) {
       this.setState({ first });
     }
@@ -142,7 +97,7 @@ export default class Main extends Component {
 
     const top = this.animates[pos].animateValue.interpolate({
       inputRange: [0, 1],
-      outputRange: [topStart, (pos * tHeight)]
+      outputRange: [topStart, (pos * HEIGHT_CELL)]
     });
 
     const rotateX = this.animates[pos].rotateValue.interpolate({
@@ -215,18 +170,6 @@ export default class Main extends Component {
   renderTabs() {
     const { active, toggled } = this.state;
 
-    const styles = {
-      heading1: {
-        fontSize: 22,
-      },
-      strong: {
-        fontSize: 18,
-      },
-      paragraph: {
-        fontSize: 14,
-      }
-    };
-
     return (
       <View style={{flex:1, zIndex: 0}}>
         {TABS.map((tab, i) => {
@@ -249,23 +192,13 @@ export default class Main extends Component {
                    toggled={toggled}
                    pos={i}
                    setActive={this.setActive}>
-                <Markdown styles={styles}>{tab.content}</Markdown>
+                {tab.content()}
               </Tab>
             </Animated.View>
           );
         })}
       </View>
     );
-  }
-
-  renderScrollTabs() {
-    return (
-      <ScrollView style={{flex: 1}} onScroll={this.handleScroll} scrollEventThrottle={16}>
-        <View style={{height: (TABS.length + 1) * tHeight }}>
-          {this.renderTabs()}
-        </View>
-      </ScrollView>
-    )
   }
 
   render() {
@@ -276,7 +209,8 @@ export default class Main extends Component {
         flexDirection: 'column',
         marginTop: 20,
         alignItems: 'stretch',
-        width
+        width,
+        backgroundColor: 'rgba(0 ,0,0, .3)'
       },
       tabs: {
         flex: 1
@@ -287,12 +221,21 @@ export default class Main extends Component {
       }
     });
 
-    const tabs = this.state.toggled ? this.renderScrollTabs() : this.renderTabs();
+    const { toggled } = this.state;
+    const height = toggled ? (TABS.length + 1) * HEIGHT_CELL : HEIGHT;
 
     return (
       <View style={styles.main}>
         <View style={styles.tabs}>
-          {tabs}
+          <ScrollView style={{flex: 1}}
+                      scrollEnabled={toggled}
+                      ref={this.scrollRef}
+                      onScroll={this.handleScroll}
+                      scrollEventThrottle={16}>
+            <View style={{height}}>
+              {this.renderTabs()}
+            </View>
+          </ScrollView>
         </View>
         <View style={styles.toggle}>
           <Toggle toggled={this.state.toggled} onClick={this.onToggle} />

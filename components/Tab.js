@@ -15,29 +15,14 @@ export default class Tab extends Component {
       setActive(pos);
     }
   };
-
-  renderView() {
-    return (
-      <ScrollView style={{padding: 10, flex: 1}}>
-        {this.props.children}
-      </ScrollView>);
-  }
-
-  renderPressView() {
-    return (
-      <TouchableHighlight style={{flex: 1}} onPress={this.onPress}>
-        {this.renderView()}
-      </TouchableHighlight>
-    );
-  }
-
+  
   render() {
-    const { toggled, color } = this.props;
+    const { toggled } = this.props;
 
     const styles = StyleSheet.create({
       container: {
+        backgroundColor: '#fff',
         flex: 1,
-        backgroundColor: color,
         width: width,
         height: height - 57,
         shadowColor: '#000000',
@@ -50,11 +35,13 @@ export default class Tab extends Component {
       }
     });
 
-    const view = toggled ? this.renderPressView() : this.renderView();
-
     return (
       <View style={styles.container}>
-        {view}
+        <TouchableHighlight style={{flex: 1}} disabled={!toggled} onPress={this.onPress}>
+          <ScrollView style={{padding: 10, flex: 1}} scrollEnabled={!toggled}>
+            {this.props.children}
+          </ScrollView>
+        </TouchableHighlight>
       </View>
     );
   }
