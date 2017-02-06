@@ -30,6 +30,9 @@ export default class Main extends Component {
       opacityValue: new Animated.Value(1)
     }));
 
+    this.scrollValue = new Animated.Value(0);
+    this.scrolled = 0;
+
     this.tabs = TABS.map((tab, i) => this.getAnimateValues(i, this.state.active));
   }
 
@@ -61,6 +64,7 @@ export default class Main extends Component {
   handleScroll = (event) => {
     if (this.state.toggled) {
       const scrolled = event.nativeEvent.contentOffset.y;
+      this.scrolled = scrolled;
       const first = Math.floor(scrolled / HEIGHT_CELL);
       const scrolledCurr = scrolled % HEIGHT_CELL;
 
@@ -142,7 +146,11 @@ export default class Main extends Component {
       return state;
     }, []);
 
-    Animated.parallel(animations).start();
+    Animated.parallel(animations).start(() => {
+      const scrolledDelta = (TABS.length + 1) * HEIGHT_CELL - HEIGHT;
+      const scrollTo = scrolledDelta * active / TABS.length + 1;
+      this._scroll.scrollTo({ y: scrollTo, animated: true });
+    });
   }
 
   back() {
