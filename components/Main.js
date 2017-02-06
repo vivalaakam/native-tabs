@@ -54,8 +54,6 @@ And even add a cool video ð!
   { content: 'Tab7', color: '#03A9F4' }
 ];
 
-const AnimatedScrollView = Animated.createAnimatedComponent(ScrollView);
-
 const { width, height } = Dimensions.get('window');
 
 const tHeight = ( height - 38 ) / 5;
@@ -63,30 +61,157 @@ const tHeight = ( height - 38 ) / 5;
 export default class Main extends Component {
   state = {
     toggled: false,
-    stamp: null,
-    active: 0,
-    scrolled: 0,
-    scrolledCurr: 0,
-    first: 0
+    first: 0,
+    active: 0
   };
 
+  constructor(props) {
+    super(props);
+
+    this.rotated = 0;
+
+    this.animates = TABS.map((tab, i) => ({
+      animateValue: new Animated.Value(0),
+      rotateValue: new Animated.Value(0),
+      opacityValue: new Animated.Value(1)
+    }));
+
+    this.tabs = TABS.map((tab, i) => this.getAnimateValues(i));
+  }
+
   onToggle = () => {
-    this.setState({ toggled: !this.state.toggled, stamp: +new Date() });
+    this.setState({ toggled: !this.state.toggled }, () => {
+      if (this.state.toggled === true) {
+        this.forward();
+      } else {
+        this.back();
+      }
+    });
   };
 
   setActive = (active) => {
-    this.setState({ active });
-    this.onToggle();
+    this.setState({ active, toggled: !this.state.toggled }, () => {
+      if (this.state.toggled === true) {
+        this.forward();
+      } else {
+        this.back();
+      }
+    });
   };
 
   handleScroll = (event) => {
     const scrolled = event.nativeEvent.contentOffset.y;
     const first = Math.floor(scrolled / tHeight);
     const scrolledCurr = scrolled % tHeight;
-    this.setState({ scrolled, first, scrolledCurr });
+
+    const currS = (5 * scrolledCurr ) / tHeight;
+    if (first !== this.state.first) {
+      this.setState({ first });
+    }
+    this.animateTab(first, currS / 55);
   };
 
+  animateTab(first, cRotated) {
+    const animates = this.animates.map((animate, i) => {
+      return new Promise((resolve) => {
+        animate.rotateValue.stopAnimation((value) => {
+          const delta = i - first;
+          const curr = delta < 0 ? 20 : 20 + delta * 5;
+          const rotated = curr / 55 + cRotated;
+          const rot = Math.min(curr / 55 + this.rotated, value);
+          const timing = Math.abs(( rotated - rot ) * 100);
+          resolve(this.animate(animate.rotateValue, rot, rotated, timing));
+        });
+      });
+    });
+
+    Promise.all(animates).then((animates) => {
+      Animated.parallel(animates).start(() => {
+        this.rotated = cRotated;
+      });
+    })
+  }
+
+  getAnimateValues(pos) {
+    const { active } = this.state;
+
+    const topStart = pos > active ? height : 0;
+
+    const top = this.animates[pos].animateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [topStart, (pos * tHeight)]
+    });
+
+    const rotateX = this.animates[pos].rotateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: ['0deg', '-55deg']
+    });
+
+    const perspective = this.animates[pos].rotateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [170, 760]
+    });
+
+    const scale = this.animates[pos].animateValue.interpolate({
+      inputRange: [0, 1],
+      outputRange: [1, 0.7]
+    });
+
+    const opacity = this.animates[pos].opacityValue.interpolate({
+      inputRange: [0, 0.25, 1],
+      outputRange: [0, 0, 1]
+    });
+
+    return { top, rotateX, scale, opacity, perspective }
+  }
+
+  animate(value, initial, toValue, timing = 500) {
+    value.setValue(initial);
+    return Animated.timing(value, { toValue, timing });
+  }
+
+  forward() {
+    const { active, first } = this.state;
+    const animations = this.animates.reduce((state, curr, i) => {
+      const delta = i - first;
+      const currP = 20 + delta * 5;
+      const rotated = currP / 55 + this.rotated;
+      const zIndex = active === i ? 1 : 0;
+
+      state.push(
+        this.animate(curr.animateValue, 0, 1),
+        this.animate(curr.rotateValue, 0, rotated),
+        this.animate(curr.opacityValue, zIndex, 1)
+      );
+      return state;
+    }, []);
+
+    Animated.parallel(animations).start();
+  }
+
+  back() {
+    const { active, first } = this.state;
+    const animations = this.animates.reduce((state, curr, i) => {
+      const delta = i - first;
+      const currP = 20 + delta * 5;
+      const rotated = currP / 55 + this.rotated;
+      const zIndex = active === i ? 1 : 0;
+
+      state.push(
+        this.animate(curr.animateValue, 1, 0),
+        this.animate(curr.rotateValue, rotated, 0),
+        this.animate(curr.opacityValue, 1, zIndex)
+      );
+
+      return state;
+    }, []);
+
+    Animated.parallel(animations).start();
+  }
+
   renderTabs() {
+    const { active, toggled } = this.state;
+
     const styles = {
       heading1: {
         fontSize: 22,
@@ -100,22 +225,30 @@ export default class Main extends Component {
     };
 
     return (
-      <View style={{flex:1}}>
+      <View style={{flex:1, zIndex: 0}}>
         {TABS.map((tab, i) => {
+          const { top, rotateX, scale, opacity, perspective } = this.getAnimateValues(i);
+          const zIndex = active === i || toggled ? 1 : 0;
+          const style = {
+            position: 'absolute',
+            flex: 1,
+            opacity,
+            top,
+            zIndex,
+            transform: [{ perspective }, { rotateX }, { scale }]
+          };
+
           return (
-            <Tab color={tab.color}
-                 key={i}
-                 toggled={this.state.toggled}
-                 pos={i}
-                 active={this.state.active}
-                 scrolled={this.state.scrolled}
-                 first={this.state.first}
-                 scrolledCurr={this.state.scrolledCurr}
-                 stamp={this.state.stamp}
-                 tHeight={tHeight}
-                 setActive={this.setActive}>
-              <Markdown styles={styles}>{tab.content}</Markdown>
-            </Tab>
+            <Animated.View
+              style={style}
+              key={Math.random()}>
+              <Tab color={tab.color}
+                   toggled={toggled}
+                   pos={i}
+                   setActive={this.setActive}>
+                <Markdown styles={styles}>{tab.content}</Markdown>
+              </Tab>
+            </Animated.View>
           );
         })}
       </View>
